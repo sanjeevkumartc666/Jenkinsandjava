@@ -7,7 +7,7 @@ pipeline {
         ECR_REPO_NAME = 'jenkinsecr'
         // NOTE: This ECR URI '311145409616...' is for a PRIVATE ECR in ap-south-1, 
         // but your login stage uses 'public.ecr.aws' (us-east-1). These must match.
-        ECR_PUBLIC_REPO_URI = '311145409616.dkr.ecr.ap-south-1.amazonaws.com/jenkinsecr' 
+        ECR_PUBLIC_REPO_URI = 'public.ecr.aws/i0m8d5u6/jenkinsecr' 
         IMAGE_TAG = 'latest'
         AWS_ACCOUNT_ID = '311145409616'
         IMAGE_URI = "${ECR_PUBLIC_REPO_URI}:${IMAGE_TAG}"
