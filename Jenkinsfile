@@ -80,7 +80,6 @@ pipeline {
             }
         }
         
-      //  <!-- REMOVE THE LINE 'Use code with caution.' HERE -->
 
         stage('Build Docker Image') {
             steps {
