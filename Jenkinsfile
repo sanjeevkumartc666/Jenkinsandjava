@@ -70,12 +70,17 @@ stage('Configure AWS Credentials') {
             steps {
                 script {
                     sh '''
-                        echo "Logging into AWS ECR..."
-                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+                        echo "Logging into AWS ECR Public..."
+                        # Use a shell variable to store the password first
+                        ECR_PASSWORD=$(aws ecr-public get-login-password --region us-east-1)
+                        
+                        # Then echo the variable and pipe it to docker login
+                        echo $ECR_PASSWORD | docker login --username AWS --password-stdin public.ecr.aws
                     '''
                 }
             }
         }
+Use code with caution.
 
         stage('Build Docker Image') {
             steps {
