@@ -5,7 +5,9 @@ pipeline {
         GIT_REPO = 'https://github.com/sanjeevkumartc666/Jenkinsandjava.git'
         AWS_REGION = 'ap-south-1'
         ECR_REPO_NAME = 'jenkinsecr'
-        ECR_PUBLIC_REPO_URI = '311145409616.dkr.ecr.ap-south-1.amazonaws.com/jenkinsecr'
+        // NOTE: This ECR URI '311145409616...' is for a PRIVATE ECR in ap-south-1, 
+        // but your login stage uses 'public.ecr.aws' (us-east-1). These must match.
+        ECR_PUBLIC_REPO_URI = '311145409616.dkr.ecr.ap-south-1.amazonaws.com/jenkinsecr' 
         IMAGE_TAG = 'latest'
         AWS_ACCOUNT_ID = '311145409616'
         IMAGE_URI = "${ECR_PUBLIC_REPO_URI}:${IMAGE_TAG}"
@@ -31,23 +33,22 @@ pipeline {
             }
         }
 
-stage('Configure AWS Credentials') {
-    steps {
-        script {
-            sh '''
-            echo "Setting up AWS credentials for Jenkins..."
-            mkdir -p /var/lib/jenkins/.aws
-            echo "[default]" > /var/lib/jenkins/.aws/credentials
-            # Using the new, valid keys you provided earlier:
-            echo "aws_access_key_id=AKIAUQ4NWFRICZ5E3UQF" >> /var/lib/jenkins/.aws/credentials
-            echo "aws_secret_access_key=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" >> /var/lib/jenkins/.aws/credentials
-            chown -R jenkins:jenkins /var/lib/jenkins/.aws
-            '''
+        stage('Configure AWS Credentials') {
+            steps {
+                script {
+                    sh '''
+                    echo "Setting up AWS credentials for Jenkins..."
+                    mkdir -p /var/lib/jenkins/.aws
+                    echo "[default]" > /var/lib/jenkins/.aws/credentials
+                    # Using the new, valid keys you provided earlier:
+                    # WARNING: These keys are compromised and should be deactivated immediately!
+                    echo "aws_access_key_id=AKIAUQ4NWFRICZ5E3UQF" >> /var/lib/jenkins/.aws/credentials
+                    echo "aws_secret_access_key=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" >> /var/lib/jenkins/.aws/credentials
+                    chown -R jenkins:jenkins /var/lib/jenkins/.aws
+                    '''
+                }
+            }
         }
-    }
-}
-
-
 
         stage('Clone Repository') {
             steps {
@@ -71,22 +72,22 @@ stage('Configure AWS Credentials') {
                 script {
                     sh '''
                         echo "Logging into AWS ECR Public..."
-                        # Use a shell variable to store the password first
+                        # This command is for ECR PUBLIC (us-east-1)
                         ECR_PASSWORD=$(aws ecr-public get-login-password --region us-east-1)
-                        
-                        # Then echo the variable and pipe it to docker login
                         echo $ECR_PASSWORD | docker login --username AWS --password-stdin public.ecr.aws
                     '''
                 }
             }
         }
-Use code with caution.
+        
+        <!-- REMOVE THE LINE 'Use code with caution.' HERE -->
 
         stage('Build Docker Image') {
             steps {
                 script {
                     sh '''
                         echo "Building Docker image..."
+                        # This build command uses your ECR PRIVATE URI
                         docker build -t ${IMAGE_URI} .
                     '''
                 }
@@ -104,7 +105,7 @@ Use code with caution.
             }
         }
 
-   }
+    }
     
     post {
         success {
