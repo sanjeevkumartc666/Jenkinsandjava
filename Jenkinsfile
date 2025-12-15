@@ -39,8 +39,8 @@ stage('Configure AWS Credentials') {
             mkdir -p /var/lib/jenkins/.aws
             echo "[default]" > /var/lib/jenkins/.aws/credentials
             # Using the new, valid keys you provided earlier:
-            echo "aws_access_key_id=AKIAUQ4NWFRIN6432JTP" >> /var/lib/jenkins/.aws/credentials
-            echo "aws_secret_access_key=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" >> /var/lib/jenkins/.aws/credentials
+            echo "aws_access_key_id=AKIAUQ4NWFRICZ5E3UQF" >> /var/lib/jenkins/.aws/credentials
+            echo "aws_secret_access_key=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" >> /var/lib/jenkins/.aws/credentials
             chown -R jenkins:jenkins /var/lib/jenkins/.aws
             '''
         }
