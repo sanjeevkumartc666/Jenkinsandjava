@@ -33,70 +33,22 @@ pipeline {
             }
         }
 
-        stage('Configure AWS Credentials') {
+        // REMOVE the 'Configure AWS Credentials' stage entirely and use this instead:
+        stage('Login to AWS ECR, Build & Push Docker Image') {
             steps {
-                script {
-                    sh '''
-                    echo "Setting up AWS credentials for Jenkins..."
-                    mkdir -p /var/lib/jenkins/.aws
-                    echo "[default]" > /var/lib/jenkins/.aws/credentials
-                    # Using the new, valid keys you provided earlier:
-                    # WARNING: These keys are compromised and should be deactivated immediately!
-                    echo "aws_access_key_id=AKIAUQ4NWFRICZ5E3UQF" >> /var/lib/jenkins/.aws/credentials
-                    echo "aws_secret_access_key=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" >> /var/lib/jenkins/.aws/credentials
-                    chown -R jenkins:jenkins /var/lib/jenkins/.aws
-                    '''
-                }
-            }
-        }
-
-        stage('Clone Repository') {
-            steps {
-                git url: "${GIT_REPO}", branch: 'main'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                script {
-                    sh '''
-                        echo "Building Java application..."
-                        mvn clean -B -Denforcer.skip=true package
-                    '''
-                }
-            }
-        }
-
-        stage('Login to AWS ECR') {
-            steps {
-                script {
+                // This block injects the securely stored credentials into the environment variables
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
                     sh '''
                         echo "Logging into AWS ECR Public..."
-                        # This command is for ECR PUBLIC (us-east-1)
-                        ECR_PASSWORD=$(aws ecr-public get-login-password --region us-east-1)
-                        echo $ECR_PASSWORD | docker login --username AWS --password-stdin public.ecr.aws
-                    '''
-                }
-            }
-        }
-        
+                        # The 'aws' CLI automatically uses the injected ENV variables to authenticate
+                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_PUBLIC_REPO_URI}
 
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    sh '''
-                        echo "Building Docker image..."
-                        # This build command uses your ECR PRIVATE URI
+                        echo "Building Docker image: ${IMAGE_URI}"
                         docker build -t ${IMAGE_URI} .
-                    '''
-                }
-            }
-        }
 
-        stage('Push Docker Image to ECR') {
-            steps {
-                script {
-                    sh '''
                         echo "Pushing Docker image to ECR..."
                         docker push ${IMAGE_URI}
                     '''
@@ -104,7 +56,7 @@ pipeline {
             }
         }
 
-    }
+
     
     post {
         success {
